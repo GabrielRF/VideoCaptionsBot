@@ -1,0 +1,5 @@
+[TELEGRAM]
+BOT_TOKEN = <Token do bot>
+
+[RABBITMQ]
+CONNECTION_STRING = <String de conexão>
