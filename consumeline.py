@@ -15,20 +15,28 @@ RABBITCONNECT = config['RABBITMQ']['CONNECTION_STRING']
 
 bot = telebot.TeleBot(TOKEN)
 
+def subs_data(video_data):
+    try:
+        if video_data["width"] > video_data["height"]:
+            subs_size = '20%'
+            subs_marginv = video_data["height"]*0.07
+        elif video_data["width"] == video_data["height"]:
+            subs_size = '20%'
+            subs_marginv = video_data["height"]*0.3
+        else:
+            subs_size = '10%'
+            subs_marginv = video_data["height"]*0.02
+    except:
+        subs_size = '20%'
+        subs_marginv =100
+    return subs_size, subs_marginv
+
 def add_subtitles(file_name):
     subtitle = f'{file_name}.srt'
     video_out = f'VideoCaptionsBot.{file_name}'
     video = ffmpeg.input(file_name)
     video_data = ffmpeg.probe(file_name)['streams'][0]
-    if video_data["width"] > video_data["height"]:
-        subs_size = '20%'
-        subs_marginv = video_data["height"]*0.07
-    elif video_data["width"] == video_data["height"]:
-        subs_size = '20%'
-        subs_marginv = video_data["height"]*0.3
-    else:
-        subs_size = '10%'
-        subs_marginv = video_data["height"]*0.02
+    subs_size, subs_marginv = subs_data(video_data)
     audio = video.audio
     ffmpeg.concat(
         video.filter("subtitles",
@@ -102,6 +110,7 @@ def consume_line(rbt, method, properties, message):
         create_subs(file_name, transcription)
     except Exception as e:
         bot.delete_message(msg.chat.id, msg.id)
+        print(e)
         if 'file is too big' in str(e):
             exception = 'Arquivo é maior que o permitido.'
         elif 'string indices must be integers' in str(e):
