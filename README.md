@@ -30,6 +30,7 @@ Ao perceber alguma mensagem na fila do _RabbitMQ_, este arquivo inicia o process
 
 #### Funções
 
+* `subs_data`: Verifica os valores de tamanho da legenda e altura em relação ao vídeo;
 * `add_subtitles`: Adiciona as legendas com base no arquivo `srt`;
 * `remove_files`: Remove os arquivos do sistema;
 * `download_file`: Baixa o arquivo do servidor do Telegram;
