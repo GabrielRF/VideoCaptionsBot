@@ -1,6 +1,7 @@
 import pika
 import ffmpeg
 import telebot
+import i18n
 import os
 import yaml
 import urllib
@@ -14,6 +15,12 @@ TOKEN = config['TELEGRAM']['BOT_TOKEN']
 RABBITCONNECT = config['RABBITMQ']['CONNECTION_STRING']
 
 bot = telebot.TeleBot(TOKEN)
+
+def get_text(message, arg):
+    i18n.load_path.append("i18n")
+    i18n.set("fallback", "en-us")
+    user_lang = message['from_user']['language_code'].lower()
+    return i18n.t(arg, locale=user_lang)
 
 def subs_data(video_data):
     try:
@@ -100,43 +107,51 @@ def consume_line(rbt, method, properties, message):
     message = yaml.safe_load(message)
     msg = bot.send_message(
         message['from_user']['id'],
-        '📎 Baixando arquivo...',
+        get_text(message, 'bot.downloading'),
         reply_to_message_id=message['message_id']
     ) 
     try:
         file_name = download_file(message)
-        bot.edit_message_text('📝 Gerando legendas...', msg.chat.id, msg.id)
+        bot.edit_message_text(
+            get_text(message, 'bot.generating_subtitles'),
+            msg.chat.id, msg.id)
         transcription = voice_to_text(file_name)
         create_subs(file_name, transcription)
     except Exception as e:
         bot.delete_message(msg.chat.id, msg.id)
         print(e)
         if 'file is too big' in str(e):
-            exception = 'Arquivo é maior que o permitido.'
+            exception = get_text(message, 'bot.error_file_too_big')
         elif 'string indices must be integers' in str(e):
-            exception = 'Arquivo não é um vídeo.'
+            exception = get_text(message, 'bot.error_file_not_video')
         elif 'does not contain any stream' in str(e):
-            exception = 'Arquivo não é um vídeo.'
+            exception = get_text(message, 'bot.error_file_not_video')
         else:
-            exception = 'Erro desconhecido.'
+            exception = get_text(message, 'bot.error_unknown:')
         bot.send_message(
             msg.chat.id,
-            f'❌ Erro.\n<code>{exception}</code>',
+            f'{get_text({message}, "bot.error")}\n{exception}',
             reply_to_message_id=message['message_id'],
             parse_mode='HTML'
         )
         return
     #send_file(msg.chat.id, f'{file_name}.srt')
-    bot.edit_message_text('🎞 Adicionando legendas ao vídeo...', msg.chat.id, msg.id)
+    bot.edit_message_text(
+        get_text(message, 'bot.adding_subtitles'),
+        msg.chat.id, msg.id
+    )
     video_with_captions = add_subtitles(file_name)
-    bot.edit_message_text('🎉 Enviando arquivo. Aguarde.', msg.chat.id, msg.id)
+    bot.edit_message_text(
+        get_text(message, 'bot.sending_file'),
+        msg.chat.id, msg.id
+    )
     try:
         send_file(msg.chat.id, video_with_captions, message['content_type'])
     except Exception as e:
-        exception = 'Arquivo muito grande para ser enviado.'
+        exception = get_text(message, 'bot.error_file_too_big')
         bot.send_message(
             msg.chat.id,
-            f'❌ Erro.\n\n<code>{exception}</code>',
+            f'{get_text({message}, "bot.error")}\n{exception}',
             reply_to_message_id=message['message_id'],
             parse_mode='HTML'
         )

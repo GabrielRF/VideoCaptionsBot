@@ -1,0 +1,11 @@
+es:
+  cmd_start: ¡Hola! Envíame un video y agregaré subtítulos a él.
+  please_wait: ⏳ Por favor, espera.
+  downloading: 📎 Descargando archivo...
+  generating_subtitles: 📝 Creando subtítulos...
+  error_file_too_big: El archivo es demasiado grande.
+  error_file_not_video: El archivo no es un video.
+  error_unknown: Error desconocido.
+  error: ❌ Error.
+  adding_subtitles: 🎞  Agregando subtítulos al video...
+  sending_file: 🎉 Subiendo archivo. Por favor, espera.

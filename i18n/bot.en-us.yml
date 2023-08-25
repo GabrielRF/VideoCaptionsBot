@@ -1,0 +1,11 @@
+en-us:
+  cmd_start: Hello! Send me a video and I'll add captions to it.
+  please_wait: ⏳ Please, wait.
+  downloading: 📎 Downloading file...
+  generating_subtitles: 📝 Creating captions...
+  error_file_too_big: File is too big.
+  error_file_not_video: File is not a video.
+  error_unknown: Unknown error.
+  error: ❌ Error.
+  adding_subtitles: 🎞  Adding captions to the video...
+  sending_file: 🎉 Uploading file. Please, wait.
