@@ -5,3 +5,4 @@ openai-whisper==20230314
 urllib3==1.25.8
 configparser==6.0.0
 python-i18n==0.3.9
+PyYAML==6.0.1
