@@ -7,6 +7,7 @@ config = configparser.ConfigParser()
 config.read('bot.conf')
 TOKEN = config['TELEGRAM']['BOT_TOKEN']
 RABBITCONNECT = config['RABBITMQ']['CONNECTION_STRING']
+BANNED = config['TELEGRAM']['BAN']
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -41,6 +42,9 @@ def start(message):
 
 @bot.message_handler(content_types=['video', 'document', 'video_note'])
 def get_video(message):
+    if str(message.from_user.id) in BANNED:
+        bot.delete_message(message.from_user.id, message.message_id)
+        return 0
     add_to_line(message)
     bot.send_message(
         message.from_user.id,

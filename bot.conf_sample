@@ -1,5 +1,10 @@
 [TELEGRAM]
-BOT_TOKEN = <Token do bot>
+BOT_TOKEN = <token do bot>
+BAN = <ids banidos>
 
 [RABBITMQ]
-CONNECTION_STRING = <String de conexão>
+CONNECTION_STRING = <string de conexão ao rabbitmq>
+
+[OPENAI]
+SECRETKEY = <chave secreta de acesso à openai>
+MAX_TOKENS = 1024
