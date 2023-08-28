@@ -2,6 +2,7 @@ import pika
 import ffmpeg
 import telebot
 import i18n
+import openai
 import os
 import yaml
 import urllib
@@ -38,9 +39,13 @@ def subs_data(video_data):
         subs_marginv =100
     return subs_size, subs_marginv
 
-def add_subtitles(file_name):
-    subtitle = f'{file_name}.srt'
-    video_out = f'VideoCaptionsBot.{file_name}'
+def add_subtitles(file_name, translate=False):
+    if not translate:
+        subtitle = f'{file_name}.srt'
+        video_out = f'VideoCaptionsBot.{file_name}'
+    else:
+        subtitle = f'{file_name}_translated.srt'
+        video_out = f'VideoCaptionsBot_translated.{file_name}'
     video = ffmpeg.input(file_name)
     video_data = ffmpeg.probe(file_name)['streams'][0]
     subs_size, subs_marginv = subs_data(video_data)
@@ -58,9 +63,18 @@ def add_subtitles(file_name):
     return video_out
 
 def remove_files(file_name):
-    os.remove(f'{file_name}.srt')
-    os.remove(file_name)
-    os.remove(f'VideoCaptionsBot.{file_name}')
+    names = [
+        f'{file_name}.srt',
+        f'{file_name}',
+        f'VideoCaptionsBot.{file_name}',
+        f'{file_name}_translated.srt',
+        f'VideoCaptionsBot_translated.{file_name}'
+    ]
+    for fname in names:
+        try:
+            os.remove(fname)
+        except:
+            pass
 
 def download_file(message):
     file_info = bot.get_file(message[message['content_type']]['file_id'])
@@ -102,6 +116,40 @@ def send_file(user, file_name, content_type='document'):
     else:
         bot.send_document(user, document)
 
+def should_translate(transcription, message):
+    user_lang = message['from_user']['language_code'].lower()
+    transcription_lang = transcription['language']
+    if transcription_lang in user_lang:
+        return False
+    return True
+
+def translate_srt_file(file_name, message):
+    user_lang = message['from_user']['language_code'].lower()
+    openai.api_key = config['OPENAI']['SECRETKEY']
+    gpt_query = []
+    content = open(f'{file_name}.srt', 'r').read()
+    gpt_query.append(
+        {
+            'role': 'user',
+            'content': f'Translate the srt file to {user_lang} keeping timestamps.\n{content}'
+        }
+    )
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages = gpt_query,
+        n = 1,
+        temperature = 1,
+        max_tokens=1024
+    )
+
+    text = response.choices[0].message.content
+    return text
+
+def save_translated_srt(content, file_name):
+    translated_srt = open(f'{file_name}_translated.srt', 'w')
+    translated_srt.write(content)
+    translated_srt.close()
+
 def consume_line(rbt, method, properties, message):
     rbt.basic_ack(delivery_tag=method.delivery_tag)
     message = yaml.safe_load(message)
@@ -117,6 +165,10 @@ def consume_line(rbt, method, properties, message):
             msg.chat.id, msg.id)
         transcription = voice_to_text(file_name)
         create_subs(file_name, transcription)
+        translated = should_translate(transcription, message)
+        if translated:
+            content = translate_srt_file(file_name, message)
+            save_translated_srt(content, file_name)
     except Exception as e:
         bot.delete_message(msg.chat.id, msg.id)
         print(e)
@@ -141,12 +193,24 @@ def consume_line(rbt, method, properties, message):
         msg.chat.id, msg.id
     )
     video_with_captions = add_subtitles(file_name)
+    if translated:
+        video_with_translated_captions = add_subtitles(file_name, True)
     bot.edit_message_text(
         get_text(message, 'bot.sending_file'),
         msg.chat.id, msg.id
     )
     try:
-        send_file(msg.chat.id, video_with_captions, message['content_type'])
+        send_file(
+            msg.chat.id,
+            video_with_captions,
+            message['content_type']
+        )
+        if translated:
+            send_file(
+                msg.chat.id,
+                video_with_translated_captions,
+                message['content_type']
+            )
     except Exception as e:
         exception = get_text(message, 'bot.error_file_too_big')
         bot.send_message(
