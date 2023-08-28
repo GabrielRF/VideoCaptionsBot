@@ -14,6 +14,7 @@ config = configparser.ConfigParser()
 config.read('bot.conf')
 TOKEN = config['TELEGRAM']['BOT_TOKEN']
 RABBITCONNECT = config['RABBITMQ']['CONNECTION_STRING']
+MAX_TOKENS = int(config['OPENAI']['MAX_TOKENS'])
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -139,11 +140,12 @@ def translate_srt_file(file_name, message):
         messages = gpt_query,
         n = 1,
         temperature = 1,
-        max_tokens=1024
+        max_tokens=MAX_TOKENS
     )
 
     text = response.choices[0].message.content
-    return text
+    tokens = response.usage.total_tokens
+    return text, tokens
 
 def save_translated_srt(content, file_name):
     translated_srt = open(f'{file_name}_translated.srt', 'w')
@@ -167,8 +169,13 @@ def consume_line(rbt, method, properties, message):
         create_subs(file_name, transcription)
         translated = should_translate(transcription, message)
         if translated:
-            content = translate_srt_file(file_name, message)
-            save_translated_srt(content, file_name)
+            try:
+                content, tokens = translate_srt_file(file_name, message)
+                if tokens > MAX_TOKENS:
+                    translated = False
+                save_translated_srt(content, file_name)
+            except openai.error.APIError:
+                pass
     except Exception as e:
         bot.delete_message(msg.chat.id, msg.id)
         print(e)
@@ -179,10 +186,10 @@ def consume_line(rbt, method, properties, message):
         elif 'does not contain any stream' in str(e):
             exception = get_text(message, 'bot.error_file_not_video')
         else:
-            exception = get_text(message, 'bot.error_unknown:')
+            exception = get_text(message, 'bot.error_unknown')
         bot.send_message(
             msg.chat.id,
-            f'{get_text({message}, "bot.error")}\n{exception}',
+            f'{get_text(message, "bot.error")}\n{exception}',
             reply_to_message_id=message['message_id'],
             parse_mode='HTML'
         )
