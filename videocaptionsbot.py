@@ -1,7 +1,9 @@
 import telebot
 import pika
 import configparser
+import datetime
 import i18n
+import logging.handlers
 
 config = configparser.ConfigParser()
 config.read('bot.conf')
@@ -9,7 +11,23 @@ TOKEN = config['TELEGRAM']['BOT_TOKEN']
 RABBITCONNECT = config['RABBITMQ']['CONNECTION_STRING']
 BANNED = config['TELEGRAM']['BAN']
 
+logger_info = logging.getLogger('VideoCaptionsBot')
+logger_info.setLevel(logging.DEBUG)
+handler_info = logging.handlers.TimedRotatingFileHandler(
+    '/var/log/VideoCaptionsBot/videocaptionsbot.log',
+    when='midnight',
+    interval=1,
+    backupCount=30,
+    encoding='utf-8'
+)
+logger_info.addHandler(handler_info)
+
 bot = telebot.TeleBot(TOKEN)
+
+def add_log(message):
+    logger_info.info(
+        f'{datetime.datetime.now()} {message}'
+    )
 
 def get_text(message, arg):
     i18n.load_path.append("i18n")
@@ -33,6 +51,7 @@ def add_to_line(message):
 
 @bot.message_handler(commands=["start"])
 def start(message):
+    add_log(message)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(
         message.from_user.id,
@@ -42,13 +61,15 @@ def start(message):
 
 @bot.message_handler(content_types=['video', 'document', 'video_note'])
 def get_video(message):
+    add_log(message)
     if str(message.from_user.id) in BANNED:
         bot.delete_message(message.from_user.id, message.message_id)
         return 0
     add_to_line(message)
     bot.send_message(
         message.from_user.id,
-        get_text(message, 'bot.please_wait')
+        get_text(message, 'bot.please_wait'),
+        reply_to_message_id=message.id
     )
 
 if __name__ == "__main__":
