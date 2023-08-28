@@ -1,5 +1,5 @@
 pt-br:
-  cmd_start: Olá! Me envie um vídeo e irei criar as legendas automaticamente.
+  cmd_start: Olá! Me envie um vídeo e criarei as legendas automaticamente.
   please_wait: ⏳ Por favor, aguarde.
   downloading: 📎 Baixando arquivo...
   generating_subtitles: 📝 Gerando legendas...
@@ -9,3 +9,6 @@ pt-br:
   error: ❌ Erro.
   adding_subtitles: 🎞  Adicionando legendas ao vídeo...
   sending_file: 🎉 Enviando arquivo. Aguarde.
+  restricted_content: ❌ Conteúdo inadequado.
+  original_video: 🌐 Idioma original.
+  translated_video: 🇧🇷 Tradução.

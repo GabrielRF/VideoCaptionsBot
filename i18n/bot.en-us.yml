@@ -9,3 +9,6 @@ en-us:
   error: ❌ Error.
   adding_subtitles: 🎞  Adding captions to the video...
   sending_file: 🎉 Uploading file. Please, wait.
+  restricted_content: ❌ Prohibited content.
+  original_video: 🌐 Original language.
+  translated_video: 📍 Translated

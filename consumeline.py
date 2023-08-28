@@ -108,14 +108,14 @@ def voice_to_text(voice_file):
     )
     return result
 
-def send_file(user, file_name, content_type='document'):
+def send_file(user, file_name, content_type='document', caption=None):
     document = open(file_name, 'rb')
     if content_type == 'video_note':
         bot.send_video_note(user, document)
     elif content_type == 'video':
-        bot.send_video(user, document)
+        bot.send_video(user, document, caption=caption)
     else:
-        bot.send_document(user, document)
+        bot.send_document(user, document, caption=caption)
 
 def should_translate(transcription, message):
     user_lang = message['from_user']['language_code'].lower()
@@ -152,6 +152,13 @@ def save_translated_srt(content, file_name):
     translated_srt.write(content)
     translated_srt.close()
 
+def check_policy(transcription):
+    openai.api_key = config['OPENAI']['SECRETKEY']
+    response = openai.Moderation.create(
+        input = transcription['text']
+    )
+    return response['results'][0]['flagged']
+
 def consume_line(rbt, method, properties, message):
     rbt.basic_ack(delivery_tag=method.delivery_tag)
     message = yaml.safe_load(message)
@@ -164,8 +171,17 @@ def consume_line(rbt, method, properties, message):
         file_name = download_file(message)
         bot.edit_message_text(
             get_text(message, 'bot.generating_subtitles'),
-            msg.chat.id, msg.id)
+            msg.chat.id, msg.id
+        )
         transcription = voice_to_text(file_name)
+        if check_policy(transcription):
+            bot.delete_message(message['from_user']['id'], message['message_id'])
+            bot.edit_message_text(
+                get_text(message, 'bot.restricted_content'),
+                msg.chat.id, msg.id
+            )
+            remove_files(file_name)
+            return
         create_subs(file_name, transcription)
         translated = should_translate(transcription, message)
         if translated:
@@ -193,6 +209,10 @@ def consume_line(rbt, method, properties, message):
             reply_to_message_id=message['message_id'],
             parse_mode='HTML'
         )
+        try:
+            remove_files(file_name)
+        except:
+            pass
         return
     #send_file(msg.chat.id, f'{file_name}.srt')
     bot.edit_message_text(
@@ -210,13 +230,15 @@ def consume_line(rbt, method, properties, message):
         send_file(
             msg.chat.id,
             video_with_captions,
-            message['content_type']
+            message['content_type'],
+            caption = get_text(message, 'bot.original_video')
         )
         if translated:
             send_file(
                 msg.chat.id,
                 video_with_translated_captions,
-                message['content_type']
+                message['content_type'],
+                caption = get_text(message, 'bot.translated_video')
             )
     except Exception as e:
         exception = get_text(message, 'bot.error_file_too_big')
