@@ -1,3 +1,4 @@
+import videocaptionsbot
 import pika
 import ffmpeg
 import telebot
@@ -61,7 +62,7 @@ def add_subtitles(file_name, translate=False):
         audio,
         v=1,
         a=1).output(video_out).run()
-    return video_out
+    return video_out, video_data["height"], video_data["width"]
 
 def remove_files(file_name):
     names = [
@@ -108,12 +109,12 @@ def voice_to_text(voice_file):
     )
     return result
 
-def send_file(user, file_name, content_type='document', caption=None):
+def send_file(user, file_name, content_type='document', caption=None, height=None, width=None):
     document = open(file_name, 'rb')
     if content_type == 'video_note':
         bot.send_video_note(user, document)
     elif content_type == 'video':
-        bot.send_video(user, document, caption=caption)
+        bot.send_video(user, document, caption=caption, width=width, height=height)
     else:
         bot.send_document(user, document, caption=caption)
 
@@ -152,11 +153,13 @@ def save_translated_srt(content, file_name):
     translated_srt.write(content)
     translated_srt.close()
 
-def check_policy(transcription):
+def check_policy(transcription, user_id):
     openai.api_key = config['OPENAI']['SECRETKEY']
     response = openai.Moderation.create(
         input = transcription['text']
     )
+    print(response)
+    videocaptionsbot.add_log(f'{user_id}: \n{response}')
     return response['results'][0]['flagged']
 
 def consume_line(rbt, method, properties, message):
@@ -174,7 +177,7 @@ def consume_line(rbt, method, properties, message):
             msg.chat.id, msg.id
         )
         transcription = voice_to_text(file_name)
-        if check_policy(transcription):
+        if check_policy(transcription, message['from_user']['id']):
             bot.delete_message(message['from_user']['id'], message['message_id'])
             bot.edit_message_text(
                 get_text(message, 'bot.restricted_content'),
@@ -190,7 +193,8 @@ def consume_line(rbt, method, properties, message):
                 if tokens > MAX_TOKENS:
                     translated = False
                 save_translated_srt(content, file_name)
-            except openai.error.APIError:
+            except:
+                translated = False
                 pass
     except Exception as e:
         bot.delete_message(msg.chat.id, msg.id)
@@ -219,32 +223,35 @@ def consume_line(rbt, method, properties, message):
         get_text(message, 'bot.adding_subtitles'),
         msg.chat.id, msg.id
     )
-    video_with_captions = add_subtitles(file_name)
-    if translated:
-        video_with_translated_captions = add_subtitles(file_name, True)
-    bot.edit_message_text(
-        get_text(message, 'bot.sending_file'),
-        msg.chat.id, msg.id
-    )
     try:
+        video_with_captions, height, width = add_subtitles(file_name)
+        bot.edit_message_text(
+            get_text(message, 'bot.sending_file'),
+            msg.chat.id, msg.id
+        )
         send_file(
             msg.chat.id,
             video_with_captions,
             message['content_type'],
-            caption = get_text(message, 'bot.original_video')
+            caption=get_text(message, 'bot.original_video'),
+            height=height,
+            width=width
         )
         if translated:
+            video_with_translated_captions, height, width = add_subtitles(file_name, True)
             send_file(
                 msg.chat.id,
                 video_with_translated_captions,
                 message['content_type'],
-                caption = get_text(message, 'bot.translated_video')
+                caption=get_text(message, 'bot.translated_video'),
+                height=height,
+                width=width
             )
     except Exception as e:
         exception = get_text(message, 'bot.error_file_too_big')
         bot.send_message(
             msg.chat.id,
-            f'{get_text({message}, "bot.error")}\n{exception}',
+            f'{get_text(message, "bot.error")}\n{exception}',
             reply_to_message_id=message['message_id'],
             parse_mode='HTML'
         )
