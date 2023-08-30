@@ -1,6 +1,6 @@
 es:
   cmd_start: ¡Hola! Envíame un video y agregaré subtítulos a él.
-  please_wait: ⏳ Por favor, espera.
+  please_wait: ⏳ Por favor, espera...
   downloading: 📎 Descargando archivo...
   generating_subtitles: 📝 Creando subtítulos...
   error_file_too_big: El archivo es demasiado grande.
@@ -12,4 +12,5 @@ es:
   restricted_content: ❌ Contenido prohibido.
   original_video: Idioma original.
   translated_video: 📍 Versión traducida.
+  translating: 🗺 Traduciendo subtítulos al español...
 

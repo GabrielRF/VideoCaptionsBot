@@ -162,6 +162,13 @@ def check_policy(transcription, user_id):
     videocaptionsbot.add_log(f'{user_id}: \n{response}')
     return response['results'][0]['flagged']
 
+def edit_message(message, text, msg):
+    bot.edit_message_text(
+        get_text(message, text),
+        msg.chat.id,
+        msg.id
+    )
+
 def consume_line(rbt, method, properties, message):
     rbt.basic_ack(delivery_tag=method.delivery_tag)
     message = yaml.safe_load(message)
@@ -172,30 +179,14 @@ def consume_line(rbt, method, properties, message):
     ) 
     try:
         file_name = download_file(message)
-        bot.edit_message_text(
-            get_text(message, 'bot.generating_subtitles'),
-            msg.chat.id, msg.id
-        )
+        edit_message(message, 'bot.generating_subtitles', msg)
         transcription = voice_to_text(file_name)
         if check_policy(transcription, message['from_user']['id']):
             bot.delete_message(message['from_user']['id'], message['message_id'])
-            bot.edit_message_text(
-                get_text(message, 'bot.restricted_content'),
-                msg.chat.id, msg.id
-            )
+            edit_message(message, 'bot.restricted_content', msg)
             remove_files(file_name)
             return
         create_subs(file_name, transcription)
-        translated = should_translate(transcription, message)
-        if translated:
-            try:
-                content, tokens = translate_srt_file(file_name, message)
-                if tokens > MAX_TOKENS:
-                    translated = False
-                save_translated_srt(content, file_name)
-            except:
-                translated = False
-                pass
     except Exception as e:
         bot.delete_message(msg.chat.id, msg.id)
         print(e)
@@ -219,16 +210,10 @@ def consume_line(rbt, method, properties, message):
             pass
         return
     #send_file(msg.chat.id, f'{file_name}.srt')
-    bot.edit_message_text(
-        get_text(message, 'bot.adding_subtitles'),
-        msg.chat.id, msg.id
-    )
+    edit_message(message, 'bot.adding_subtitles', msg)
     try:
         video_with_captions, height, width = add_subtitles(file_name)
-        bot.edit_message_text(
-            get_text(message, 'bot.sending_file'),
-            msg.chat.id, msg.id
-        )
+        edit_message(message, 'bot.sending_file', msg)
         send_file(
             msg.chat.id,
             video_with_captions,
@@ -237,17 +222,30 @@ def consume_line(rbt, method, properties, message):
             height=height,
             width=width
         )
-        if translated:
-            video_with_translated_captions, height, width = add_subtitles(file_name, True)
+        edit_message(message, 'bot.please_wait', msg)
+        if should_translate(transcription, message):
+            try:
+                content, tokens = translate_srt_file(file_name, message)
+                if tokens > MAX_TOKENS:
+                    translated = False
+                edit_message(message, 'bot.translating', msg)
+                save_translated_srt(content, file_name)
+            except:
+                return
+            edit_message(message, 'bot.adding_subtitles', msg)
+            video_with_captions, height, width = add_subtitles(file_name, True)
+            edit_message(message, 'bot.sending_file', msg)
             send_file(
                 msg.chat.id,
-                video_with_translated_captions,
+                video_with_captions,
                 message['content_type'],
                 caption=get_text(message, 'bot.translated_video'),
                 height=height,
                 width=width
             )
     except Exception as e:
+        if 'Unable to open' in str(e):
+            pass
         exception = get_text(message, 'bot.error_file_too_big')
         bot.send_message(
             msg.chat.id,

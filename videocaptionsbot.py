@@ -65,12 +65,12 @@ def get_video(message):
     if str(message.from_user.id) in BANNED:
         bot.delete_message(message.from_user.id, message.message_id)
         return 0
-    add_to_line(message)
     bot.send_message(
         message.from_user.id,
         get_text(message, 'bot.please_wait'),
         reply_to_message_id=message.id
     )
+    add_to_line(message)
 
 if __name__ == "__main__":
     bot.infinity_polling()
