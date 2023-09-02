@@ -31,7 +31,7 @@ en-us:
   cmd_tos: |
     <b>Terms of Service</b>
     By using VideoCaptionsBot, you confirm that you have read and agreed to these terms.
-    Transcription texts are sent to the <a href="https://platform.openai.com/docs/guides/moderation">OpenAI moderation tool</a>, so by using the bot, you confirm that you have read and agreed to the company's usage policies, available <a href="https://openai.com/policies/usage-policies">here</a>.
+    Transcription texts are sent to the <a href="https://platform.openai.com/docs/guides/moderation">OpenAI moderation tool</a> and OpenAI ChatGPT, so by using the bot, you confirm that you have read and agreed to the company's usage policies, available <a href="https://openai.com/policies/usage-policies">here</a>.
     You must not use this bot for illegal purposes. You must not send the bot content that is illegal, unauthorized, or protected by copyright. You are responsible for all content sent to the bot.
     The bot keeps a record of messages.
     <i>@VideoCaptionsBot</i> 2023
