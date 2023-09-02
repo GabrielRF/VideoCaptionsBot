@@ -116,7 +116,7 @@ def cmd_donate(message):
         disable_web_page_preview=True
     )
 
-@bot.message_handler(commands=["tos"])
+@bot.message_handler(commands=["tos", "termos"])
 def cmd_tos(message):
     add_log(message)
     set_menu(message)
