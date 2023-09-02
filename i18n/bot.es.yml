@@ -1,5 +1,4 @@
 es:
-  cmd_start: ¡Hola! Envíame un video y agregaré subtítulos a él.
   please_wait: ⏳ Por favor, espera...
   downloading: 📎 Descargando archivo...
   generating_subtitles: 📝 Creando subtítulos...
@@ -13,4 +12,26 @@ es:
   original_video: Idioma original.
   translated_video: 📍 Versión traducida.
   translating: 🗺 Traduciendo subtítulos al español...
-
+  menu_start: /start
+  menu_start_description: Reiniciar el bot
+  menu_info: /info
+  menu_info_description: Información sobre el bot
+  menu_donate: /donate
+  menu_donate_description: Donar al bot
+  menu_tos: /tos
+  menu_tos_description: Términos de Servicio
+  cmd_start: ¡Hola! Envíame un video y agregaré subtítulos a él.
+  cmd_info: |
+    <b>Repositorio</b>: https://github.com/GabrielRF/VideoCaptionsBot
+    <b>Autor</b>: @GabrielRF
+  cmd_donate: |
+    <b>¡Donar para ayudar a mantener el bot en funcionamiento!</b>
+    <a href="https://www.paypal.com/donate/?hosted_button_id=GFPPS8QRW3QE2">Haga clic aquí para donar usando PayPal</a>.
+    <i>El bot cuesta aproximadamente 35 euros al mes</i>.
+  cmd_tos: |
+    <b>Términos de Servicio</b>
+    Al utilizar VideoCaptionsBot, confirmas que has leído y aceptado estos términos.
+    Los textos de transcripción se envían a la <a href="https://platform.openai.com/docs/guides/moderation">herramienta de moderación de OpenAI</a>, por lo que al utilizar el bot, confirmas que has leído y aceptado las políticas de uso de la empresa, disponibles <a href="https://openai.com/policies/usage-policies">aquí</a>.
+    No debes utilizar este bot con fines ilegales. No debes enviar al bot contenido que sea ilegal, no autorizado o protegido por derechos de autor. Eres responsable de todo el contenido enviado al bot.
+    El bot mantiene un registro de mensajes.
+    <i>@VideoCaptionsBot</i> 2023

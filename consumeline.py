@@ -159,7 +159,8 @@ def check_policy(transcription, user_id):
         input = transcription['text']
     )
     print(response)
-    videocaptionsbot.add_log(f'{user_id}: \n{response}')
+    if response['results'][0]['flagged']:
+        videocaptionsbot.add_log(f'{user_id}: \n{response}')
     return response['results'][0]['flagged']
 
 def edit_message(message, text, msg):

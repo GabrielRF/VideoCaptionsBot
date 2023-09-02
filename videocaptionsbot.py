@@ -4,6 +4,7 @@ import configparser
 import datetime
 import i18n
 import logging.handlers
+from telebot import types
 
 config = configparser.ConfigParser()
 config.read('bot.conf')
@@ -35,6 +36,31 @@ def get_text(message, arg):
     user_lang = message.from_user.language_code.lower()
     return i18n.t(arg, locale=user_lang)
 
+def set_menu(message):
+    try:
+        bot.set_my_commands(
+            [
+                telebot.types.BotCommand(
+                    get_text(message, 'bot.menu_start'),
+                    get_text(message, 'bot.menu_start_description')
+                ),
+                telebot.types.BotCommand(
+                    get_text(message, 'bot.menu_tos'),
+                    get_text(message, 'bot.menu_tos_description')
+                ),
+                telebot.types.BotCommand(
+                    get_text(message, 'bot.menu_donate'),
+                    get_text(message, 'bot.menu_donate_description')
+                ),
+                telebot.types.BotCommand(
+                    get_text(message, 'bot.menu_info'),
+                    get_text(message, 'bot.menu_info_description')
+                )
+            ], scope=types.BotCommandScopeChat(message.from_user.id)
+        )
+    except:
+        pass
+
 def add_to_line(message):
     rabbitmq_con = pika.BlockingConnection(pika.URLParameters(RABBITCONNECT))
     rabbit = rabbitmq_con.channel()
@@ -50,13 +76,56 @@ def add_to_line(message):
     rabbitmq_con.close()
 
 @bot.message_handler(commands=["start"])
-def start(message):
+def cmd_start(message):
     add_log(message)
+    set_menu(message)
     bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(
         message.from_user.id,
         get_text(message, 'bot.cmd_start'),
         parse_mode='HTML'
+    )
+    bot.send_message(
+        message.from_user.id,
+        get_text(message, 'bot.cmd_tos'),
+        parse_mode='HTML',
+        disable_web_page_preview=True
+    )
+
+@bot.message_handler(commands=["info"])
+def cmd_info(message):
+    add_log(message)
+    set_menu(message)
+    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_message(
+        message.from_user.id,
+        get_text(message, 'bot.cmd_info'),
+        parse_mode='HTML',
+        disable_web_page_preview=True
+    )
+
+@bot.message_handler(commands=["pix", "donate"])
+def cmd_donate(message):
+    add_log(message)
+    set_menu(message)
+    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_message(
+        message.from_user.id,
+        get_text(message, 'bot.cmd_donate'),
+        parse_mode='HTML',
+        disable_web_page_preview=True
+    )
+
+@bot.message_handler(commands=["tos"])
+def cmd_tos(message):
+    add_log(message)
+    set_menu(message)
+    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_message(
+        message.from_user.id,
+        get_text(message, 'bot.cmd_tos'),
+        parse_mode='HTML',
+        disable_web_page_preview=True
     )
 
 @bot.message_handler(content_types=['video', 'document', 'video_note'])
