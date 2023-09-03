@@ -245,9 +245,10 @@ def consume_line(rbt, method, properties, message):
                 width=width
             )
     except Exception as e:
-        if 'Unable to open' in str(e):
-            pass
-        exception = get_text(message, 'bot.error_file_too_big')
+        if 'too_big' in str(e):
+            exception = get_text(message, 'bot.error_file_too_big')
+        else:
+            exception = get_text(message, 'bot.error_unknown')
         bot.send_message(
             msg.chat.id,
             f'{get_text(message, "bot.error")}\n{exception}',
