@@ -26,20 +26,16 @@ def get_text(message, arg):
     return i18n.t(arg, locale=user_lang)
 
 def subs_data(video_data):
-    try:
-        if video_data["width"] > video_data["height"]:
-            subs_size = '20%'
-            subs_marginv = video_data["height"]*0.07
-        elif video_data["width"] == video_data["height"]:
-            subs_size = '20%'
-            subs_marginv = video_data["height"]*0.3
-        else:
-            subs_size = '10%'
-            subs_marginv = video_data["height"]*0.02
-    except:
+    if video_data["width"] > video_data["height"]:
         subs_size = '20%'
-        subs_marginv =100
-    return subs_size, subs_marginv
+        subs_marginv = video_data["height"]*0.07
+    elif video_data["width"] == video_data["height"]:
+        subs_size = '20%'
+        subs_marginv = video_data["height"]*0.3
+    else:
+        subs_size = '10%'
+        subs_marginv = video_data["height"]*0.02
+    return subs_size, subs_marginv, video_data["width"], video_data["height"]
 
 def add_subtitles(file_name, translate=False):
     if not translate:
@@ -49,8 +45,9 @@ def add_subtitles(file_name, translate=False):
         subtitle = f'{file_name}_translated.srt'
         video_out = f'VideoCaptionsBot_translated.{file_name}'
     video = ffmpeg.input(file_name)
-    video_data = ffmpeg.probe(file_name)['streams'][0]
-    subs_size, subs_marginv = subs_data(video_data)
+    for stream in ffmpeg.probe(file_name)['streams']:
+        if stream.get("width"):
+            subs_size, subs_marginv, width, height = subs_data(stream)
     audio = video.audio
     ffmpeg.concat(
         video.filter("subtitles",
@@ -62,7 +59,7 @@ def add_subtitles(file_name, translate=False):
         audio,
         v=1,
         a=1).output(video_out).run()
-    return video_out, video_data["height"], video_data["width"]
+    return video_out, height, width
 
 def remove_files(file_name):
     names = [
@@ -158,7 +155,6 @@ def check_policy(transcription, user_id):
     response = openai.Moderation.create(
         input = transcription['text']
     )
-    print(response)
     if response['results'][0]['flagged']:
         videocaptionsbot.add_log(f'{user_id}: \n{response}')
     return response['results'][0]['flagged']
