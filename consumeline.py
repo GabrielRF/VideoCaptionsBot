@@ -130,7 +130,7 @@ def translate_srt_file(file_name, message):
     gpt_query.append(
         {
             'role': 'user',
-            'content': f'Translate the srt file to {user_lang} keeping timestamps.\n{content}'
+            'content': f'Rewrite the sentences of the srt in {user_lang} keeping timetamps.\n{content}'
         }
     )
     response = openai.ChatCompletion.create(
