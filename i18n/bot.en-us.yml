@@ -8,7 +8,9 @@ en-us:
   error: ❌ Error.
   adding_subtitles: 🎞  Adding captions to the video...
   sending_file: 🎉 Uploading file. Please, wait.
-  restricted_content: ❌ Prohibited content.
+  restricted_content: |
+    ❌ Prohibited content.
+    <code>{}</code>
   original_video: 🌐 Original language.
   translated_video: 📍 Translated
   translating: 🗺 Translating captions to English...

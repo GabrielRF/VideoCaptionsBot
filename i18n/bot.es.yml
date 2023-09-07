@@ -8,7 +8,9 @@ es:
   error: ❌ Error.
   adding_subtitles: 🎞  Agregando subtítulos al video...
   sending_file: 🎉 Subiendo archivo. Por favor, espera.
-  restricted_content: ❌ Contenido prohibido.
+  restricted_content: |
+    ❌ Contenido prohibido.
+    <code>{}</code>
   original_video: Idioma original.
   translated_video: 📍 Versión traducida.
   translating: 🗺 Traduciendo subtítulos al español...

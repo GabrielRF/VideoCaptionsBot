@@ -151,19 +151,24 @@ def save_translated_srt(content, file_name):
     translated_srt.close()
 
 def check_policy(transcription, user_id):
+    reason = None
     openai.api_key = config['OPENAI']['SECRETKEY']
     response = openai.Moderation.create(
         input = transcription['text']
     )
     if response['results'][0]['flagged']:
         videocaptionsbot.add_log(f'{user_id}: \n{response}')
-    return response['results'][0]['flagged']
+        for key, value in response['results'][0]['categories'].items():
+            if value:
+                reason = key
+    return response['results'][0]['flagged'], reason
 
-def edit_message(message, text, msg):
+def edit_message(message, text, msg, extras=None):
     bot.edit_message_text(
-        get_text(message, text),
+        get_text(message, text).format(extras),
         msg.chat.id,
-        msg.id
+        msg.id,
+        parse_mode='HTML'
     )
 
 def consume_line(rbt, method, properties, message):
@@ -178,9 +183,12 @@ def consume_line(rbt, method, properties, message):
         file_name = download_file(message)
         edit_message(message, 'bot.generating_subtitles', msg)
         transcription = voice_to_text(file_name)
-        if check_policy(transcription, message['from_user']['id']):
+        policy, reason = check_policy(
+            transcription, message['from_user']['id']
+        )
+        if policy:
             bot.delete_message(message['from_user']['id'], message['message_id'])
-            edit_message(message, 'bot.restricted_content', msg)
+            edit_message(message, 'bot.restricted_content', msg, reason)
             remove_files(file_name)
             return
         create_subs(file_name, transcription)

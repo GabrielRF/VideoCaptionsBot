@@ -8,7 +8,9 @@ pt-br:
   error: ❌ Erro.
   adding_subtitles: 🎞  Adicionando legendas ao vídeo...
   sending_file: 🎉 Enviando arquivo. Aguarde.
-  restricted_content: ❌ Conteúdo inadequado.
+  restricted_content: |
+    ❌ Conteúdo inadequado.
+    <code>{}</code>
   original_video: 🌐 Idioma original.
   translated_video: 🇧🇷 Tradução.
   translating: 🗺 Traduzindo legendas para o português...
