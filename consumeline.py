@@ -248,6 +248,12 @@ def consume_line(rbt, method, properties, message):
                 height=height,
                 width=width
             )
+        bot.send_message(
+            message['from_user']['id'],
+            get_text(message, 'bot.cmd_donate'),
+            parse_mode='HTML',
+            disable_web_page_preview=True
+        )
     except Exception as e:
         if 'too_big' in str(e):
             exception = get_text(message, 'bot.error_file_too_big')

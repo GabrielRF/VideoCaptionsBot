@@ -27,7 +27,7 @@ es:
     <b>Repositorio</b>: https://github.com/GabrielRF/VideoCaptionsBot
     <b>Autor</b>: @GabrielRF
   cmd_donate: |
-    <b>¡Donar para ayudar a mantener el bot en funcionamiento!</b>
+    <b>¡Donar para ayudar a mantener el bot en funcionamiento!</b> 💶
     <a href="https://www.paypal.com/donate/?hosted_button_id=GFPPS8QRW3QE2">Haga clic aquí para donar usando PayPal</a>.
     <i>El bot cuesta aproximadamente 35 euros al mes</i>.
   cmd_tos: |
